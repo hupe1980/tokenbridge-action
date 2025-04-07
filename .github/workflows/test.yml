@@ -1,0 +1,14 @@
+name: Test Action
+
+on:
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./ # Use the local action
+        with:
+          audience: 'tokenbridge'
+          tokenbridge-url: 'https://14jlzn6ssj.execute-api.eu-central-1.amazonaws.com'
