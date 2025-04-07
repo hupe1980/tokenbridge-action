@@ -91,12 +91,12 @@ async function getIDToken(audience) {
 }
 async function exchangeToken(tokenbridgeUrl, idToken) {
     try {
-        const response = await fetch(`${tokenbridgeUrl}/exchange/`, {
+        const response = await fetch(`${tokenbridgeUrl}/exchange`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ idToken }),
+            body: JSON.stringify({ 'id_token': idToken }),
         });
         if (!response.ok) {
             throw new Error(`Token exchange failed with status: ${response.status} - ${response.statusText}`);
