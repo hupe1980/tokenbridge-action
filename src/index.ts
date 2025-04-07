@@ -17,7 +17,7 @@ async function getIDToken(audience: string): Promise<string> {
 
 async function exchangeToken(tokenbridgeUrl: string, idToken: string): Promise<any> {
   try {
-    const response = await fetch(tokenbridgeUrl, {
+    const response = await fetch(`${tokenbridgeUrl}/exchange/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
