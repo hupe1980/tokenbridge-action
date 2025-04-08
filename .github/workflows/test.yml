@@ -15,4 +15,4 @@ jobs:
       - uses: ./ # Use the local action
         with:
           audience: 'tokenbridge'
-          tokenbridge-url: 'https://14jlzn6ssj.execute-api.eu-central-1.amazonaws.com'
+          tokenbridge-url: ${{ secrets.TOKENBRIDGE_URL }}
