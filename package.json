@@ -1,12 +1,17 @@
 {
   "name": "tokenbridge-action",
   "version": "0.0.1",
+  "private": true,
   "description": "",
   "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc",
     "lint": "biome check --fix --error-on-warnings ./src",
-    "package": "npm run build && ncc build -o dist && ncc build src/cleanup/index.ts -o dist/cleanup",
+    "package": "npm run build && ncc build -o dist",
     "test": "npm run lint && vitest run"
   },
   "author": "",

@@ -1,3 +1,51 @@
+import * as core from '@actions/core';
+
+export interface ExchangeTokenResponse {
+  access_token: string; // Updated to match the API response
+}
+
+export async function getIDToken(audience: string): Promise<string> {
+  try {
+    return await retryAndBackoff(
+      async () => {
+        return core.getIDToken(audience);
+      },
+      false,
+      5,
+    );
+  } catch (error) {
+    throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
+  }
+}
+
+export async function exchangeToken(tokenbridgeUrl: string, idToken: string): Promise<ExchangeTokenResponse> {
+  try {
+    const response = await retryAndBackoff(
+      async () => {
+        const res = await fetch(`${tokenbridgeUrl}/exchange`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id_token: idToken }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);
+        }
+
+        return res;
+      },
+      false,
+      5, // Retry up to 5 times
+    );
+
+    return (await response.json()) as ExchangeTokenResponse;
+  } catch (error) {
+    throw new Error(`exchangeToken call failed: ${errorMessage(error)}`);
+  }
+}
+
 export function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }

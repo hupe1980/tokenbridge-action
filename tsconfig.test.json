@@ -6,6 +6,7 @@
     ],
     "exclude": [],
     "compilerOptions": {
-      "rootDir": "./"
+      "rootDir": "./",
+      "types": ["vitest/globals"],
     },
   }

@@ -3,7 +3,7 @@ description:
 runs:
   using: node20
   main: dist/index.js
-  post: dist/cleanup/index.js
+  post: dist/index.js
 branding:
   color: blue
   icon: cloud

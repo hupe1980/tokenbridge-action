@@ -1,42 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 2918:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.errorMessage = errorMessage;
-exports.sleep = sleep;
-exports.retryAndBackoff = retryAndBackoff;
-function errorMessage(error) {
-    return error instanceof Error ? error.message : String(error);
-}
-async function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-async function retryAndBackoff(fn, isRetryable, maxRetries = 12, retries = 0, base = 50) {
-    try {
-        return await fn();
-    }
-    catch (err) {
-        if (!isRetryable) {
-            throw err;
-        }
-        await sleep(Math.random() * (2 ** retries * base));
-        // biome-ignore lint/style/noParameterAssign: This is a loop variable
-        retries += 1;
-        if (retries >= maxRetries) {
-            throw err;
-        }
-        return await retryAndBackoff(fn, isRetryable, maxRetries, retries, base);
-    }
-}
-//# sourceMappingURL=helpers.js.map
-
-/***/ }),
-
 /***/ 4935:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -76,35 +40,115 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
-const helpers_1 = __nccwpck_require__(2918);
+const main_1 = __nccwpck_require__(7666);
+const IsPost = !!core.getState('isPost');
+// Main
+if (!IsPost) {
+    (0, main_1.run)();
+}
+// Post
+else {
+    (0, main_1.cleanup)();
+}
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 7666:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = run;
+exports.cleanup = cleanup;
+const core = __importStar(__nccwpck_require__(7484));
 async function getIDToken(audience) {
     try {
-        return await (0, helpers_1.retryAndBackoff)(async () => {
+        return await retryAndBackoff(async () => {
             return core.getIDToken(audience);
         }, false, 5);
     }
     catch (error) {
-        throw new Error(`getIDToken call failed: ${(0, helpers_1.errorMessage)(error)}`);
+        throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
     }
 }
 async function exchangeToken(tokenbridgeUrl, idToken) {
     try {
-        const response = await fetch(`${tokenbridgeUrl}/exchange`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 'id_token': idToken }),
-        });
-        if (!response.ok) {
-            throw new Error(`Token exchange failed with status: ${response.status} - ${response.statusText}`);
-        }
-        return await response.json();
+        const response = await retryAndBackoff(async () => {
+            const res = await fetch(`${tokenbridgeUrl}/exchange`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id_token: idToken }),
+            });
+            if (!res.ok) {
+                throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);
+            }
+            return res;
+        }, false, 5);
+        return (await response.json());
     }
     catch (error) {
-        throw new Error(`exchangeToken call failed: ${(0, helpers_1.errorMessage)(error)}`);
+        throw new Error(`exchangeToken call failed: ${errorMessage(error)}`);
+    }
+}
+function errorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+}
+async function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function retryAndBackoff(fn, isRetryable, maxRetries = 12, retries = 0, base = 50) {
+    try {
+        return await fn();
+    }
+    catch (err) {
+        if (!isRetryable) {
+            throw err;
+        }
+        await sleep(Math.random() * (2 ** retries * base));
+        // biome-ignore lint/style/noParameterAssign: This is a loop variable
+        retries += 1;
+        if (retries >= maxRetries) {
+            throw err;
+        }
+        return await retryAndBackoff(fn, isRetryable, maxRetries, retries, base);
     }
 }
 async function run() {
@@ -113,24 +157,28 @@ async function run() {
         const tokenbridgeUrl = core.getInput('tokenbridge-url', { required: true });
         const idToken = await getIDToken(audience);
         const exchangedToken = await exchangeToken(tokenbridgeUrl, idToken);
-        core.info(`Exchanged token: ${JSON.stringify(exchangedToken)}`);
+        // Use the correct key from the API response
+        core.setSecret(exchangedToken.access_token);
+        core.setOutput('tokenbridge-access-token', exchangedToken.access_token);
+        core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', exchangedToken.access_token);
     }
     catch (error) {
-        core.setFailed(`Action failed with error: ${(0, helpers_1.errorMessage)(error)}`);
+        core.setFailed(`Action failed with error: ${errorMessage(error)}`);
         const showStackTrace = process.env.SHOW_STACK_TRACE;
         if (showStackTrace === 'true') {
             throw error;
         }
     }
 }
-if (require.main === require.cache[eval('__filename')]) {
-    (async () => {
-        await run();
-    })().catch((error) => {
-        core.setFailed((0, helpers_1.errorMessage)(error));
-    });
+function cleanup() {
+    try {
+        core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', '');
+    }
+    catch (error) {
+        core.warning(errorMessage(error));
+    }
 }
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=main.js.map
 
 /***/ }),
 
