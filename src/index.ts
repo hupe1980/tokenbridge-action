@@ -4,7 +4,7 @@ import { cleanup, run } from './main';
 const IsPost = core.getState('isPost') === 'true';
 
 if (!IsPost) {
-  core.saveState('isPost', 'true')
+  core.saveState('isPost', 'true');
 }
 
 // Main

@@ -11,7 +11,7 @@ export async function run(): Promise<void> {
   try {
     const audience = core.getInput('audience', { required: false });
     const tokenbridgeUrl = core.getInput('tokenbridge-url', { required: true });
-
+    const outputAccessToken = core.getBooleanInput('output-access-token', { required: false });
     core.startGroup('TokenBridge Id2Access Token Exchange');
     core.info(`Audience: ${audience}`);
     core.info(`TokenBridge URL: ${tokenbridgeUrl}`);
@@ -25,8 +25,12 @@ export async function run(): Promise<void> {
     const { access_token: accessToken } = exchangedToken;
 
     core.setSecret(accessToken);
-    core.setOutput('tokenbridge-access-token', accessToken);
+
     core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', accessToken);
+
+    if (outputAccessToken) {
+      core.setOutput('access-token', accessToken);
+    }
   } catch (error) {
     core.setFailed(`Action failed: ${errorMessage(error)}`);
 

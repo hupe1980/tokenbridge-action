@@ -6,6 +6,7 @@ import { run, cleanup } from '../src/main';
 vi.mock('@actions/core', async () => ({
   ...(await vi.importActual('@actions/core') as {}),
   getInput: vi.fn(),
+  getBooleanInput: vi.fn(),
   setSecret: vi.fn(),
   setOutput: vi.fn(),
   exportVariable: vi.fn(),
@@ -32,6 +33,8 @@ describe('run', () => {
         if (name === 'tokenbridge-url') return 'https://bridge.example.com';
         return '';
       });
+    
+      vi.mocked(core.getBooleanInput).mockReturnValue(true);
 
     vi.mocked(helpers.getIDToken).mockResolvedValue('mock-id-token');
     vi.mocked(helpers.exchangeToken).mockResolvedValue({ access_token: 'mock-access-token' });
@@ -39,7 +42,7 @@ describe('run', () => {
     await run();
 
     expect(core.setSecret).toHaveBeenCalledWith('mock-access-token');
-    expect(core.setOutput).toHaveBeenCalledWith('tokenbridge-access-token', 'mock-access-token');
+    expect(core.setOutput).toHaveBeenCalledWith('access-token', 'mock-access-token');
     expect(core.exportVariable).toHaveBeenCalledWith('TOKENBRIDGE_ACCESS_TOKEN', 'mock-access-token');
     expect(core.setFailed).not.toHaveBeenCalled();
   });
