@@ -44,6 +44,7 @@ export async function run(): Promise<void> {
 export function cleanup(): void {
   try {
     core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', '');
+    core.info('Cleared TOKENBRIDGE_ACCESS_TOKEN from environment variables.');
   } catch (error) {
     core.warning(`Cleanup failed: ${errorMessage(error)}`);
   }

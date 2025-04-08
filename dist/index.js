@@ -145,7 +145,10 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const main_1 = __nccwpck_require__(7666);
-const IsPost = !!core.getState('isPost');
+const IsPost = core.getState('isPost') === 'true';
+if (!IsPost) {
+    core.saveState('isPost', 'true');
+}
 // Main
 if (!IsPost) {
     (0, main_1.run)();
@@ -237,6 +240,7 @@ async function run() {
 function cleanup() {
     try {
         core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', '');
+        core.info('Cleared TOKENBRIDGE_ACCESS_TOKEN from environment variables.');
     }
     catch (error) {
         core.warning(`Cleanup failed: ${(0, helpers_1.errorMessage)(error)}`);
