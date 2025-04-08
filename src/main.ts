@@ -12,10 +12,17 @@ export async function run(): Promise<void> {
     const audience = core.getInput('audience', { required: false });
     const tokenbridgeUrl = core.getInput('tokenbridge-url', { required: true });
 
+    core.startGroup('TokenBridge Id2Access Token Exchange');
+    core.info(`Audience: ${audience}`);
+    core.info(`TokenBridge URL: ${tokenbridgeUrl}`);
+
     const idToken = await getIDToken(audience);
+
     const exchangedToken = await exchangeToken(tokenbridgeUrl, idToken);
 
-    const accessToken = exchangedToken.access_token;
+    core.endGroup();
+
+    const { access_token: accessToken } = exchangedToken;
 
     core.setSecret(accessToken);
     core.setOutput('tokenbridge-access-token', accessToken);
