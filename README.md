@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run TokenBridge Action
-        uses: hupe1980/tokenbridge-action@v0.0.2
+        uses: hupe1980/tokenbridge-action@<tag or sha>
         with:
           audience: my-audience
           tokenbridge-url: https://bridge.example.com
