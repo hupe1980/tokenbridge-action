@@ -12,7 +12,7 @@ inputs:
     description: The audience to use for the OIDC provider.
     required: false
     default: tokenbridge
-  tokenbridge-url:
+  exchange-endpoint:
     description: The URL of the TokenBridge exchange endpoint.
     required: true
   output-access-token:

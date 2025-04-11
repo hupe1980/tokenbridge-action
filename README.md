@@ -16,7 +16,7 @@
 | Name                  | Description                                              | Required | Default       |
 |-----------------------|----------------------------------------------------------|----------|---------------|
 | `audience`            | The audience to use for the OIDC provider.               | No       | `tokenbridge` |
-| `tokenbridge-url`     | The URL of the TokenBridge service.                      | Yes      |               |
+| `exchange-endpoint`     | The URL of the TokenBridge exchange endpoint.                      | Yes      |               |
 | `output-access-token` | Whether to set the access token as a step output.        | No       | `false`       |
 | `custom-claims`       | Custom claims to include in the token exchange request (JSON string). | No | `{}` |
 
@@ -57,7 +57,7 @@ jobs:
         uses: hupe1980/tokenbridge-action@<tag or sha>
         with:
           audience: my-audience
-          tokenbridge-url: https://bridge.example.com
+          exchange-endpoint: https://bridge.example.com/exchange
           output-access-token: true
           custom-claims: '{"role": "admin", "scope": "read:all"}'
 

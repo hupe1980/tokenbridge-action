@@ -56,10 +56,10 @@ async function getIDToken(audience) {
         throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
     }
 }
-async function exchangeToken(tokenbridgeUrl, idToken, customClaims = {}) {
+async function exchangeToken(exchangeEndpoint, idToken, customClaims = {}) {
     try {
         const response = await retryAndBackoff(async () => {
-            const res = await fetch(`${tokenbridgeUrl}`, {
+            const res = await fetch(`${exchangeEndpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -204,6 +204,7 @@ exports.run = run;
 exports.cleanup = cleanup;
 const core = __importStar(__nccwpck_require__(7484));
 const helpers_1 = __nccwpck_require__(2918);
+const ENV_VAR_NAME = 'TOKENBRIDGE_ACCESS_TOKEN';
 /**
  * Main GitHub Action entrypoint.
  *
@@ -213,7 +214,7 @@ const helpers_1 = __nccwpck_require__(2918);
 async function run() {
     try {
         const audience = core.getInput('audience', { required: false });
-        const tokenbridgeUrl = core.getInput('tokenbridge-url', { required: true });
+        const exchangeEndpoint = core.getInput('exchange-endpoint', { required: true });
         const outputAccessToken = core.getBooleanInput('output-access-token', { required: false });
         const customClaimsInput = core.getInput('custom-claims', { required: false });
         // Parse custom claims
@@ -223,14 +224,14 @@ async function run() {
         }
         core.startGroup('TokenBridge Id2Access Token Exchange');
         core.info(`Audience: ${audience}`);
-        core.info(`TokenBridge URL: ${tokenbridgeUrl}`);
+        core.info(`Exchange Endpoint: ${exchangeEndpoint}`);
         core.info(`Custom Claims: ${JSON.stringify(customClaims)}`);
         const idToken = await (0, helpers_1.getIDToken)(audience);
-        const exchangedToken = await (0, helpers_1.exchangeToken)(tokenbridgeUrl, idToken, customClaims);
+        const exchangedToken = await (0, helpers_1.exchangeToken)(exchangeEndpoint, idToken, customClaims);
         core.endGroup();
         const { access_token: accessToken } = exchangedToken;
         core.setSecret(accessToken);
-        core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', accessToken);
+        core.exportVariable(ENV_VAR_NAME, accessToken);
         if (outputAccessToken) {
             core.setOutput('access-token', accessToken);
         }
@@ -249,8 +250,8 @@ async function run() {
  */
 function cleanup() {
     try {
-        core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', '');
-        core.info('Cleared TOKENBRIDGE_ACCESS_TOKEN from environment variables.');
+        core.exportVariable(ENV_VAR_NAME, '');
+        core.info(`Cleared ${ENV_VAR_NAME} from environment variables.`);
     }
     catch (error) {
         core.warning(`Cleanup failed: ${(0, helpers_1.errorMessage)(error)}`);

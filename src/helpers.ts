@@ -19,14 +19,14 @@ export async function getIDToken(audience: string): Promise<string> {
 }
 
 export async function exchangeToken(
-  tokenbridgeUrl: string,
+  exchangeEndpoint: string,
   idToken: string,
   customClaims: Record<string, unknown> = {},
 ): Promise<ExchangeTokenResponse> {
   try {
     const response = await retryAndBackoff(
       async () => {
-        const res = await fetch(`${tokenbridgeUrl}`, {
+        const res = await fetch(`${exchangeEndpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

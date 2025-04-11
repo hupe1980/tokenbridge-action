@@ -15,5 +15,8 @@ jobs:
       - uses: ./ # Use the local action
         with:
           audience: 'tokenbridge'
-          tokenbridge-url: ${{ secrets.TOKENBRIDGE_URL }}
+          exchange-endpoint: ${{ secrets.TOKENBRIDGE_URL }}
           custom-claims: '{"role": "admin", "scope": "read:all"}'
+      - name: Print Token Length
+        run: |
+          echo "Token length: ${#TOKENBRIDGE_ACCESS_TOKEN}"

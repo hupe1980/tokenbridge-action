@@ -1,6 +1,8 @@
 import * as core from '@actions/core';
 import { errorMessage, exchangeToken, getIDToken } from './helpers';
 
+const ENV_VAR_NAME = 'TOKENBRIDGE_ACCESS_TOKEN';
+
 /**
  * Main GitHub Action entrypoint.
  *
@@ -10,7 +12,7 @@ import { errorMessage, exchangeToken, getIDToken } from './helpers';
 export async function run(): Promise<void> {
   try {
     const audience = core.getInput('audience', { required: false });
-    const tokenbridgeUrl = core.getInput('tokenbridge-url', { required: true });
+    const exchangeEndpoint = core.getInput('exchange-endpoint', { required: true });
     const outputAccessToken = core.getBooleanInput('output-access-token', { required: false });
     const customClaimsInput = core.getInput('custom-claims', { required: false });
 
@@ -22,12 +24,12 @@ export async function run(): Promise<void> {
 
     core.startGroup('TokenBridge Id2Access Token Exchange');
     core.info(`Audience: ${audience}`);
-    core.info(`TokenBridge URL: ${tokenbridgeUrl}`);
+    core.info(`Exchange Endpoint: ${exchangeEndpoint}`);
     core.info(`Custom Claims: ${JSON.stringify(customClaims)}`);
 
     const idToken = await getIDToken(audience);
 
-    const exchangedToken = await exchangeToken(tokenbridgeUrl, idToken, customClaims);
+    const exchangedToken = await exchangeToken(exchangeEndpoint, idToken, customClaims);
 
     core.endGroup();
 
@@ -35,7 +37,7 @@ export async function run(): Promise<void> {
 
     core.setSecret(accessToken);
 
-    core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', accessToken);
+    core.exportVariable(ENV_VAR_NAME, accessToken);
 
     if (outputAccessToken) {
       core.setOutput('access-token', accessToken);
@@ -56,8 +58,8 @@ export async function run(): Promise<void> {
  */
 export function cleanup(): void {
   try {
-    core.exportVariable('TOKENBRIDGE_ACCESS_TOKEN', '');
-    core.info('Cleared TOKENBRIDGE_ACCESS_TOKEN from environment variables.');
+    core.exportVariable(ENV_VAR_NAME, '');
+    core.info(`Cleared ${ENV_VAR_NAME} from environment variables.`);
   } catch (error) {
     core.warning(`Cleanup failed: ${errorMessage(error)}`);
   }
