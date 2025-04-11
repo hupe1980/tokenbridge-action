@@ -44,11 +44,11 @@ describe('exchangeToken', () => {
       json: vi.fn().mockResolvedValue(mockResponse),
     });
 
-    const tokenbridgeUrl = 'https://mock-tokenbridge-url.com';
+    const tokenbridgeUrl = 'https://mock-tokenbridge-url.com/exchange';
     const idToken = 'mock-id-token';
     const response = await exchangeToken(tokenbridgeUrl, idToken, {role: 'user'});
 
-    expect(fetch).toHaveBeenCalledWith(`${tokenbridgeUrl}/exchange`, {
+    expect(fetch).toHaveBeenCalledWith(`${tokenbridgeUrl}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id_token: idToken, custom_claims: {role: 'user'} }),
@@ -63,7 +63,7 @@ describe('exchangeToken', () => {
       statusText: 'Internal Server Error',
     });
 
-    const tokenbridgeUrl = 'https://mock-tokenbridge-url.com';
+    const tokenbridgeUrl = 'https://mock-tokenbridge-url.com/exchange';
     const idToken = 'mock-id-token';
 
     await expect(exchangeToken(tokenbridgeUrl, idToken)).rejects.toThrow(
@@ -74,7 +74,7 @@ describe('exchangeToken', () => {
   it('should throw an error if fetch fails', async () => {
     (fetch as Mock).mockRejectedValue(new Error('Network error'));
 
-    const tokenbridgeUrl = 'https://mock-tokenbridge-url.com';
+    const tokenbridgeUrl = 'https://mock-tokenbridge-url.com/exchange';
     const idToken = 'mock-id-token';
 
     await expect(exchangeToken(tokenbridgeUrl, idToken)).rejects.toThrow(

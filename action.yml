@@ -13,7 +13,7 @@ inputs:
     required: false
     default: tokenbridge
   tokenbridge-url:
-    description: The URL of the TokenBridge service.
+    description: The URL of the TokenBridge exchange endpoint.
     required: true
   output-access-token:
     description: Whether to set the access token as a step output.

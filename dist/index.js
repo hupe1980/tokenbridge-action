@@ -59,7 +59,7 @@ async function getIDToken(audience) {
 async function exchangeToken(tokenbridgeUrl, idToken, customClaims = {}) {
     try {
         const response = await retryAndBackoff(async () => {
-            const res = await fetch(`${tokenbridgeUrl}/exchange`, {
+            const res = await fetch(`${tokenbridgeUrl}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
