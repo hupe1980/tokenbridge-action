@@ -18,7 +18,11 @@ export async function getIDToken(audience: string): Promise<string> {
   }
 }
 
-export async function exchangeToken(tokenbridgeUrl: string, idToken: string): Promise<ExchangeTokenResponse> {
+export async function exchangeToken(
+  tokenbridgeUrl: string,
+  idToken: string,
+  customClaims: Record<string, unknown> = {},
+): Promise<ExchangeTokenResponse> {
   try {
     const response = await retryAndBackoff(
       async () => {
@@ -27,7 +31,7 @@ export async function exchangeToken(tokenbridgeUrl: string, idToken: string): Pr
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ id_token: idToken }),
+          body: JSON.stringify({ id_token: idToken, custom_claims: customClaims }),
         });
 
         if (!res.ok) {

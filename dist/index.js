@@ -56,7 +56,7 @@ async function getIDToken(audience) {
         throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
     }
 }
-async function exchangeToken(tokenbridgeUrl, idToken) {
+async function exchangeToken(tokenbridgeUrl, idToken, customClaims = {}) {
     try {
         const response = await retryAndBackoff(async () => {
             const res = await fetch(`${tokenbridgeUrl}/exchange`, {
@@ -64,7 +64,7 @@ async function exchangeToken(tokenbridgeUrl, idToken) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ id_token: idToken }),
+                body: JSON.stringify({ id_token: idToken, custom_claims: customClaims }),
             });
             if (!res.ok) {
                 throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);
@@ -215,11 +215,18 @@ async function run() {
         const audience = core.getInput('audience', { required: false });
         const tokenbridgeUrl = core.getInput('tokenbridge-url', { required: true });
         const outputAccessToken = core.getBooleanInput('output-access-token', { required: false });
+        const customClaimsInput = core.getInput('custom-claims', { required: false });
+        // Parse custom claims
+        let customClaims = {};
+        if (customClaimsInput) {
+            customClaims = JSON.parse(customClaimsInput);
+        }
         core.startGroup('TokenBridge Id2Access Token Exchange');
         core.info(`Audience: ${audience}`);
         core.info(`TokenBridge URL: ${tokenbridgeUrl}`);
+        core.info(`Custom Claims: ${JSON.stringify(customClaims)}`);
         const idToken = await (0, helpers_1.getIDToken)(audience);
-        const exchangedToken = await (0, helpers_1.exchangeToken)(tokenbridgeUrl, idToken);
+        const exchangedToken = await (0, helpers_1.exchangeToken)(tokenbridgeUrl, idToken, customClaims);
         core.endGroup();
         const { access_token: accessToken } = exchangedToken;
         core.setSecret(accessToken);

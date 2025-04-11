@@ -46,12 +46,12 @@ describe('exchangeToken', () => {
 
     const tokenbridgeUrl = 'https://mock-tokenbridge-url.com';
     const idToken = 'mock-id-token';
-    const response = await exchangeToken(tokenbridgeUrl, idToken);
+    const response = await exchangeToken(tokenbridgeUrl, idToken, {role: 'user'});
 
     expect(fetch).toHaveBeenCalledWith(`${tokenbridgeUrl}/exchange`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_token: idToken }),
+      body: JSON.stringify({ id_token: idToken, custom_claims: {role: 'user'} }),
     });
     expect(response).toEqual(mockResponse);
   });
