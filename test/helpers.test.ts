@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import * as core from '@actions/core';
-import { getIDToken, exchangeToken, errorMessage, sleep, retryAndBackoff } from '../src/helpers';
+import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
+import { errorMessage, exchangeToken, getIDToken, retryAndBackoff, sleep } from '../src/helpers';
 
 // Mock the @actions/core module
 vi.mock('@actions/core', () => ({
@@ -46,12 +46,12 @@ describe('exchangeToken', () => {
 
     const tokenbridgeUrl = 'https://mock-tokenbridge-url.com/exchange';
     const idToken = 'mock-id-token';
-    const response = await exchangeToken(tokenbridgeUrl, idToken, {role: 'user'});
+    const response = await exchangeToken(tokenbridgeUrl, idToken, { role: 'user' });
 
     expect(fetch).toHaveBeenCalledWith(`${tokenbridgeUrl}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_token: idToken, custom_claims: {role: 'user'} }),
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'Cache-Control': 'no-store' },
+      body: JSON.stringify({ id_token: idToken, custom_claims: { role: 'user' } }),
     });
     expect(response).toEqual(mockResponse);
   });
@@ -67,7 +67,7 @@ describe('exchangeToken', () => {
     const idToken = 'mock-id-token';
 
     await expect(exchangeToken(tokenbridgeUrl, idToken)).rejects.toThrow(
-      'Token exchange failed with status: 500 - Internal Server Error'
+      'Token exchange failed with status: 500 - Internal Server Error',
     );
   });
 
@@ -77,9 +77,7 @@ describe('exchangeToken', () => {
     const tokenbridgeUrl = 'https://mock-tokenbridge-url.com/exchange';
     const idToken = 'mock-id-token';
 
-    await expect(exchangeToken(tokenbridgeUrl, idToken)).rejects.toThrow(
-      'exchangeToken call failed: Network error'
-    );
+    await expect(exchangeToken(tokenbridgeUrl, idToken)).rejects.toThrow('exchangeToken call failed: Network error');
   });
 });
 
@@ -119,10 +117,7 @@ describe('retryAndBackoff', () => {
   });
 
   it('should retry the function if it fails and isRetryable is true', async () => {
-    const mockFn = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('Temporary error'))
-      .mockResolvedValue('success');
+    const mockFn = vi.fn().mockRejectedValueOnce(new Error('Temporary error')).mockResolvedValue('success');
 
     const result = await retryAndBackoff(mockFn, true);
 

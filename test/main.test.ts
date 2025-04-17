@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as core from '@actions/core';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as helpers from '../src/helpers';
-import { run, cleanup } from '../src/main';
+import { cleanup, run } from '../src/main';
 
 vi.mock('@actions/core', async () => ({
-  ...(await vi.importActual('@actions/core') as {}),
+  ...((await vi.importActual('@actions/core')) as {}),
   getInput: vi.fn(),
   getBooleanInput: vi.fn(),
   setSecret: vi.fn(),
@@ -27,14 +27,13 @@ describe('run', () => {
   });
 
   it('should get ID token, exchange it and set outputs', async () => {
-    vi.mocked(core.getInput)
-      .mockImplementation((name: string) => {
-        if (name === 'audience') return 'my-audience';
-        if (name === 'tokenbridge-url') return 'https://bridge.example.com';
-        return '';
-      });
-    
-      vi.mocked(core.getBooleanInput).mockReturnValue(true);
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
+      if (name === 'audience') return 'my-audience';
+      if (name === 'tokenbridge-url') return 'https://bridge.example.com';
+      return '';
+    });
+
+    vi.mocked(core.getBooleanInput).mockReturnValue(true);
 
     vi.mocked(helpers.getIDToken).mockResolvedValue('mock-id-token');
     vi.mocked(helpers.exchangeToken).mockResolvedValue({ access_token: 'mock-access-token' });

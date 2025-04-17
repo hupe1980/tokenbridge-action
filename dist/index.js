@@ -63,6 +63,8 @@ async function exchangeToken(exchangeEndpoint, idToken, customClaims = {}) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'Cache-Control': 'no-store',
                 },
                 body: JSON.stringify({ id_token: idToken, custom_claims: customClaims }),
             });
