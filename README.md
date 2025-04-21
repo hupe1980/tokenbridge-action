@@ -65,6 +65,13 @@ jobs:
         run: |
           echo "Access token: $TOKENBRIDGE_ACCESS_TOKEN"
 ```
+## Related Projects
+
+Looking to integrate or extend TokenBridge? Check out these related projects:
+
+- [**TokenBridge**](https://github.com/hupe1980/tokenbridge): The main project for TokenBridge, providing core functionality and documentation.
+kflows with TokenBridge using GitHub Actions.
+- [**TokenBridge Backend Example**](https://github.com/hupe1980/tokenbridge-backend-example): A practical example of how to create a TokenBridge backend application.
 
 ## License
 
