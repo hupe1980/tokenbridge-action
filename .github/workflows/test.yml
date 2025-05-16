@@ -16,7 +16,7 @@ jobs:
         with:
           audience: 'tokenbridge'
           exchange-endpoint: ${{ secrets.TOKENBRIDGE_URL }}
-          custom-claims: '{"role": "admin", "scope": "read:all"}'
+          custom-attributes: '{"role": "admin", "scope": "read:all"}'
       - name: Print Token Length
         run: |
           echo "Token length: ${#TOKENBRIDGE_ACCESS_TOKEN}"
