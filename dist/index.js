@@ -58,10 +58,12 @@ async function getIDToken(audience) {
 }
 async function exchangeToken(exchangeEndpoint, idToken, customAttributes = {}) {
     try {
-        const formBody = [];
-        formBody.push(`subject_token=${encodeURIComponent(idToken)}`);
+        if (!idToken) {
+            throw new Error('idToken is required');
+        }
+        let body = `subject_token=${encodeURIComponent(idToken)}`;
         if (Object.keys(customAttributes).length > 0) {
-            formBody.push(`requested_claims=${encodeURIComponent(JSON.stringify(customAttributes))}`);
+            body += `&custom_attributes=${encodeURIComponent(JSON.stringify(customAttributes))}`;
         }
         const response = await retryAndBackoff(async () => {
             const res = await fetch(`${exchangeEndpoint}`, {
@@ -71,7 +73,7 @@ async function exchangeToken(exchangeEndpoint, idToken, customAttributes = {}) {
                     Accept: 'application/json',
                     'Cache-Control': 'no-store',
                 },
-                body: formBody.join('&'),
+                body,
             });
             if (!res.ok) {
                 throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);

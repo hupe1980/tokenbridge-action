@@ -26,10 +26,13 @@ export async function exchangeToken(
   customAttributes: Record<string, unknown> = {},
 ): Promise<ExchangeTokenResponse> {
   try {
-    const formBody: string[] = [];
-    formBody.push(`subject_token=${encodeURIComponent(idToken)}`);
+    if (!idToken) {
+      throw new Error('idToken is required');
+    }
+
+    let body = `subject_token=${encodeURIComponent(idToken)}`;
     if (Object.keys(customAttributes).length > 0) {
-      formBody.push(`requested_claims=${encodeURIComponent(JSON.stringify(customAttributes))}`);
+      body += `&custom_attributes=${encodeURIComponent(JSON.stringify(customAttributes))}`;
     }
 
     const response = await retryAndBackoff(
@@ -41,7 +44,7 @@ export async function exchangeToken(
             Accept: 'application/json',
             'Cache-Control': 'no-store',
           },
-          body: formBody.join('&'),
+          body,
         });
 
         if (!res.ok) {
@@ -51,7 +54,7 @@ export async function exchangeToken(
         return res;
       },
       false,
-      5, // Retry up to 5 times
+      5,
     );
 
     return (await response.json()) as ExchangeTokenResponse;

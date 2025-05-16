@@ -60,7 +60,7 @@ describe('exchangeToken', () => {
         Accept: 'application/json',
         'Cache-Control': 'no-store',
       },
-      body: `subject_token=${encodeURIComponent(idToken)}&requested_claims=${encodeURIComponent(
+      body: `subject_token=${encodeURIComponent(idToken)}&custom_attributes=${encodeURIComponent(
         JSON.stringify(customClaims),
       )}`,
     });
