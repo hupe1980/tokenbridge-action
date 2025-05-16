@@ -46,67 +46,86 @@ exports.errorMessage = errorMessage;
 exports.sleep = sleep;
 exports.retryAndBackoff = retryAndBackoff;
 const core = __importStar(__nccwpck_require__(7484));
+/**
+ * Retrieves an OIDC ID token for the specified audience.
+ */
 async function getIDToken(audience) {
     try {
-        return await retryAndBackoff(async () => {
-            return core.getIDToken(audience);
-        }, false, 5);
+        return await retryAndBackoff(() => core.getIDToken(audience), {
+            maxRetries: 5,
+            isRetryable: false,
+        });
     }
     catch (error) {
         throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
     }
 }
+/**
+ * Exchanges an ID token for an access token using a token exchange endpoint.
+ */
 async function exchangeToken(exchangeEndpoint, idToken, customAttributes = {}) {
+    if (!idToken) {
+        throw new Error('idToken is required');
+    }
+    const params = new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+        subject_token: idToken,
+        subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
+    });
+    if (Object.keys(customAttributes).length > 0) {
+        params.append('custom_attributes', JSON.stringify(customAttributes));
+    }
     try {
-        if (!idToken) {
-            throw new Error('idToken is required');
-        }
-        let body = `subject_token=${encodeURIComponent(idToken)}`;
-        if (Object.keys(customAttributes).length > 0) {
-            body += `&custom_attributes=${encodeURIComponent(JSON.stringify(customAttributes))}`;
-        }
-        const response = await retryAndBackoff(async () => {
-            const res = await fetch(`${exchangeEndpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Accept: 'application/json',
-                    'Cache-Control': 'no-store',
-                },
-                body,
-            });
+        const response = await retryAndBackoff(() => fetch(exchangeEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Accept: 'application/json',
+                'Cache-Control': 'no-store',
+            },
+            body: params.toString(),
+        }).then((res) => {
             if (!res.ok) {
                 throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);
             }
             return res;
-        }, false, 5);
+        }), {
+            maxRetries: 5,
+            isRetryable: false,
+        });
         return (await response.json());
     }
     catch (error) {
         throw new Error(`exchangeToken call failed: ${errorMessage(error)}`);
     }
 }
+/**
+ * Extracts a consistent error message.
+ */
 function errorMessage(error) {
     return error instanceof Error ? error.message : String(error);
 }
-async function sleep(ms) {
+/**
+ * Utility for delaying execution.
+ */
+function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
-async function retryAndBackoff(fn, isRetryable, maxRetries = 12, retries = 0, base = 50) {
+async function retryAndBackoff(fn, options) {
+    const { isRetryable, maxRetries = 12, baseDelayMs = 50, attempt = 0 } = options;
     try {
         return await fn();
     }
     catch (err) {
-        if (!isRetryable) {
+        if (!isRetryable || attempt >= maxRetries) {
             throw err;
         }
-        await sleep(Math.random() * (2 ** retries * base));
-        // biome-ignore lint/style/noParameterAssign: This is a loop variable
-        retries += 1;
-        if (retries >= maxRetries) {
-            throw err;
-        }
-        return await retryAndBackoff(fn, isRetryable, maxRetries, retries, base);
+        const delay = Math.random() * (2 ** attempt * baseDelayMs);
+        await sleep(delay);
+        return retryAndBackoff(fn, {
+            ...options,
+            attempt: attempt + 1,
+        });
     }
 }
 //# sourceMappingURL=helpers.js.map

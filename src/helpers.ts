@@ -6,55 +6,63 @@ export interface ExchangeTokenResponse {
   token_type: string;
 }
 
+/**
+ * Retrieves an OIDC ID token for the specified audience.
+ */
 export async function getIDToken(audience: string): Promise<string> {
   try {
-    return await retryAndBackoff(
-      async () => {
-        return core.getIDToken(audience);
-      },
-      false,
-      5,
-    );
+    return await retryAndBackoff(() => core.getIDToken(audience), {
+      maxRetries: 5,
+      isRetryable: false,
+    });
   } catch (error) {
     throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
   }
 }
 
+/**
+ * Exchanges an ID token for an access token using a token exchange endpoint.
+ */
 export async function exchangeToken(
   exchangeEndpoint: string,
   idToken: string,
   customAttributes: Record<string, unknown> = {},
 ): Promise<ExchangeTokenResponse> {
+  if (!idToken) {
+    throw new Error('idToken is required');
+  }
+
+  const params = new URLSearchParams({
+    grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+    subject_token: idToken,
+    subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
+  });
+
+  if (Object.keys(customAttributes).length > 0) {
+    params.append('custom_attributes', JSON.stringify(customAttributes));
+  }
+
   try {
-    if (!idToken) {
-      throw new Error('idToken is required');
-    }
-
-    let body = `subject_token=${encodeURIComponent(idToken)}`;
-    if (Object.keys(customAttributes).length > 0) {
-      body += `&custom_attributes=${encodeURIComponent(JSON.stringify(customAttributes))}`;
-    }
-
     const response = await retryAndBackoff(
-      async () => {
-        const res = await fetch(`${exchangeEndpoint}`, {
+      () =>
+        fetch(exchangeEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             Accept: 'application/json',
             'Cache-Control': 'no-store',
           },
-          body,
-        });
-
-        if (!res.ok) {
-          throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);
-        }
-
-        return res;
+          body: params.toString(),
+        }).then((res) => {
+          if (!res.ok) {
+            throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);
+          }
+          return res;
+        }),
+      {
+        maxRetries: 5,
+        isRetryable: false,
       },
-      false,
-      5,
     );
 
     return (await response.json()) as ExchangeTokenResponse;
@@ -63,34 +71,46 @@ export async function exchangeToken(
   }
 }
 
-export function errorMessage(error: unknown) {
+/**
+ * Extracts a consistent error message.
+ */
+export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export async function sleep(ms: number) {
+/**
+ * Utility for delaying execution.
+ */
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function retryAndBackoff<T>(
-  fn: () => Promise<T>,
-  isRetryable: boolean,
-  maxRetries = 12,
-  retries = 0,
-  base = 50,
-): Promise<T> {
+/**
+ * Retries a function with exponential backoff.
+ */
+interface RetryOptions {
+  isRetryable: boolean;
+  maxRetries?: number;
+  baseDelayMs?: number;
+  attempt?: number;
+}
+
+export async function retryAndBackoff<T>(fn: () => Promise<T>, options: RetryOptions): Promise<T> {
+  const { isRetryable, maxRetries = 12, baseDelayMs = 50, attempt = 0 } = options;
+
   try {
     return await fn();
   } catch (err) {
-    if (!isRetryable) {
+    if (!isRetryable || attempt >= maxRetries) {
       throw err;
     }
 
-    await sleep(Math.random() * (2 ** retries * base));
-    // biome-ignore lint/style/noParameterAssign: This is a loop variable
-    retries += 1;
-    if (retries >= maxRetries) {
-      throw err;
-    }
-    return await retryAndBackoff(fn, isRetryable, maxRetries, retries, base);
+    const delay = Math.random() * (2 ** attempt * baseDelayMs);
+    await sleep(delay);
+
+    return retryAndBackoff(fn, {
+      ...options,
+      attempt: attempt + 1,
+    });
   }
 }
