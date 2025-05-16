@@ -38,7 +38,11 @@ describe('exchangeToken', () => {
   });
 
   it('should return an access token', async () => {
-    const mockResponse = { access_token: 'mock-access-token' };
+    const mockResponse = {
+      access_token: 'mock-access-token',
+      issued_token_type: 'urn:ietf:params:oauth:token-type:access_token',
+      token_type: 'Bearer',
+    };
     (fetch as Mock).mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue(mockResponse),
@@ -46,12 +50,19 @@ describe('exchangeToken', () => {
 
     const tokenbridgeUrl = 'https://mock-tokenbridge-url.com/exchange';
     const idToken = 'mock-id-token';
-    const response = await exchangeToken(tokenbridgeUrl, idToken, { role: 'user' });
+    const customClaims = { role: 'user' };
+    const response = await exchangeToken(tokenbridgeUrl, idToken, customClaims);
 
     expect(fetch).toHaveBeenCalledWith(`${tokenbridgeUrl}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'Cache-Control': 'no-store' },
-      body: JSON.stringify({ id_token: idToken, custom_claims: { role: 'user' } }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+        'Cache-Control': 'no-store',
+      },
+      body: `subject_token=${encodeURIComponent(idToken)}&requested_claims=${encodeURIComponent(
+        JSON.stringify(customClaims),
+      )}`,
     });
     expect(response).toEqual(mockResponse);
   });

@@ -16,9 +16,9 @@
 | Name                  | Description                                              | Required | Default       |
 |-----------------------|----------------------------------------------------------|----------|---------------|
 | `audience`            | The audience to use for the OIDC provider.               | No       | `tokenbridge` |
-| `exchange-endpoint`     | The URL of the TokenBridge exchange endpoint.                      | Yes      |               |
+| `exchange-endpoint`   | The URL of the TokenBridge exchange endpoint.            | Yes      |               |
 | `output-access-token` | Whether to set the access token as a step output.        | No       | `false`       |
-| `custom-claims`       | Custom claims to include in the token exchange request (JSON string). | No | `{}` |
+| `custom-attributes`   | Custom attributes to include in the token exchange request (JSON string). | No | `{}` |
 
 ## Outputs
 
@@ -59,7 +59,7 @@ jobs:
           audience: my-audience
           exchange-endpoint: https://bridge.example.com/exchange
           output-access-token: true
-          custom-claims: '{"role": "admin", "scope": "read:all"}'
+          custom-attributes: '{"role": "admin", "scope": "read:all"}'
 
       - name: Use Access Token
         run: |

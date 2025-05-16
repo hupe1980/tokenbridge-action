@@ -36,7 +36,11 @@ describe('run', () => {
     vi.mocked(core.getBooleanInput).mockReturnValue(true);
 
     vi.mocked(helpers.getIDToken).mockResolvedValue('mock-id-token');
-    vi.mocked(helpers.exchangeToken).mockResolvedValue({ access_token: 'mock-access-token' });
+    vi.mocked(helpers.exchangeToken).mockResolvedValue({
+      access_token: 'mock-access-token',
+      issued_token_type: 'urn:ietf:params:oauth:token-type:access_token',
+      token_type: 'Bearer'
+    });
 
     await run();
 

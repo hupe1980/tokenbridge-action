@@ -56,17 +56,22 @@ async function getIDToken(audience) {
         throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
     }
 }
-async function exchangeToken(exchangeEndpoint, idToken, customClaims = {}) {
+async function exchangeToken(exchangeEndpoint, idToken, customAttributes = {}) {
     try {
+        const formBody = [];
+        formBody.push(`subject_token=${encodeURIComponent(idToken)}`);
+        if (Object.keys(customAttributes).length > 0) {
+            formBody.push(`requested_claims=${encodeURIComponent(JSON.stringify(customAttributes))}`);
+        }
         const response = await retryAndBackoff(async () => {
             const res = await fetch(`${exchangeEndpoint}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     Accept: 'application/json',
                     'Cache-Control': 'no-store',
                 },
-                body: JSON.stringify({ id_token: idToken, custom_claims: customClaims }),
+                body: formBody.join('&'),
             });
             if (!res.ok) {
                 throw new Error(`Token exchange failed with status: ${res.status} - ${res.statusText}`);
@@ -218,18 +223,18 @@ async function run() {
         const audience = core.getInput('audience', { required: false });
         const exchangeEndpoint = core.getInput('exchange-endpoint', { required: true });
         const outputAccessToken = core.getBooleanInput('output-access-token', { required: false });
-        const customClaimsInput = core.getInput('custom-claims', { required: false });
-        // Parse custom claims
-        let customClaims = {};
-        if (customClaimsInput) {
-            customClaims = JSON.parse(customClaimsInput);
+        const customAttributesInput = core.getInput('custom-attributes', { required: false });
+        // Parse custom attributes
+        let customAttributes = {};
+        if (customAttributesInput) {
+            customAttributes = JSON.parse(customAttributesInput);
         }
         core.startGroup('TokenBridge Id2Access Token Exchange');
         core.info(`Audience: ${audience}`);
         core.info(`Exchange Endpoint: ${exchangeEndpoint}`);
-        core.info(`Custom Claims: ${JSON.stringify(customClaims)}`);
+        core.info(`Custom Attributes: ${JSON.stringify(customAttributes)}`);
         const idToken = await (0, helpers_1.getIDToken)(audience);
-        const exchangedToken = await (0, helpers_1.exchangeToken)(exchangeEndpoint, idToken, customClaims);
+        const exchangedToken = await (0, helpers_1.exchangeToken)(exchangeEndpoint, idToken, customAttributes);
         core.endGroup();
         const { access_token: accessToken } = exchangedToken;
         core.setSecret(accessToken);

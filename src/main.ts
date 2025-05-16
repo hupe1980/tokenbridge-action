@@ -14,22 +14,22 @@ export async function run(): Promise<void> {
     const audience = core.getInput('audience', { required: false });
     const exchangeEndpoint = core.getInput('exchange-endpoint', { required: true });
     const outputAccessToken = core.getBooleanInput('output-access-token', { required: false });
-    const customClaimsInput = core.getInput('custom-claims', { required: false });
+    const customAttributesInput = core.getInput('custom-attributes', { required: false });
 
-    // Parse custom claims
-    let customClaims = {};
-    if (customClaimsInput) {
-      customClaims = JSON.parse(customClaimsInput);
+    // Parse custom attributes
+    let customAttributes = {};
+    if (customAttributesInput) {
+      customAttributes = JSON.parse(customAttributesInput);
     }
 
     core.startGroup('TokenBridge Id2Access Token Exchange');
     core.info(`Audience: ${audience}`);
     core.info(`Exchange Endpoint: ${exchangeEndpoint}`);
-    core.info(`Custom Claims: ${JSON.stringify(customClaims)}`);
+    core.info(`Custom Attributes: ${JSON.stringify(customAttributes)}`);
 
     const idToken = await getIDToken(audience);
 
-    const exchangedToken = await exchangeToken(exchangeEndpoint, idToken, customClaims);
+    const exchangedToken = await exchangeToken(exchangeEndpoint, idToken, customAttributes);
 
     core.endGroup();
 

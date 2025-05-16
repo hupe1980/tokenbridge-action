@@ -1,7 +1,9 @@
 import * as core from '@actions/core';
 
 export interface ExchangeTokenResponse {
-  access_token: string; // Updated to match the API response
+  access_token: string;
+  issued_token_type: string;
+  token_type: string;
 }
 
 export async function getIDToken(audience: string): Promise<string> {
@@ -21,19 +23,25 @@ export async function getIDToken(audience: string): Promise<string> {
 export async function exchangeToken(
   exchangeEndpoint: string,
   idToken: string,
-  customClaims: Record<string, unknown> = {},
+  customAttributes: Record<string, unknown> = {},
 ): Promise<ExchangeTokenResponse> {
   try {
+    const formBody: string[] = [];
+    formBody.push(`subject_token=${encodeURIComponent(idToken)}`);
+    if (Object.keys(customAttributes).length > 0) {
+      formBody.push(`requested_claims=${encodeURIComponent(JSON.stringify(customAttributes))}`);
+    }
+
     const response = await retryAndBackoff(
       async () => {
         const res = await fetch(`${exchangeEndpoint}`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
             Accept: 'application/json',
             'Cache-Control': 'no-store',
           },
-          body: JSON.stringify({ id_token: idToken, custom_claims: customClaims }),
+          body: formBody.join('&'),
         });
 
         if (!res.ok) {

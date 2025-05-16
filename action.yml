@@ -20,8 +20,8 @@ inputs:
     required: false
     default: false
     type: boolean
-  custom-claims:
-    description: Custom claims to include in the token exchange request (JSON string).
+  custom-attributes:
+    description: Custom attributes to include in the token exchange request (JSON string).
     required: false
     default: '{}'
 outputs:
