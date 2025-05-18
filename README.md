@@ -72,6 +72,7 @@ Looking to integrate or extend TokenBridge? Check out these related projects:
 - [**TokenBridge**](https://github.com/hupe1980/tokenbridge): The main project for TokenBridge, providing core functionality and documentation.
 kflows with TokenBridge using GitHub Actions.
 - [**TokenBridge Backend Example**](https://github.com/hupe1980/tokenbridge-backend-example): A practical example of how to create a TokenBridge backend application.
+- [**TokenBridge K8s Sidecar**](https://github.com/hupe1980/tokenbridge-k8s-sidecar): Kubernetes sidecar for automatic token exchange and injection.
 
 ## License
 
